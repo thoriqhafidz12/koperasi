@@ -3,6 +3,9 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="m-0">{{ $titlePage }}</h3>
+        <a href="{{ route('import-jurnal.index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-file-import mr-1"></i> Import dari Excel
+        </a>
     </div>
 
     {{-- Filter Form --}}
@@ -197,11 +200,14 @@
                 $infoRange.text('');
             }
 
-            /**
-             * Escape & dan " untuk atribut data-label
-             */
-            function escAttr(s) {
-                return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            /** Escape output dari API sebelum disisipkan ke HTML. */
+            function escHtml(s) {
+                return String(s ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
             }
 
             /**
@@ -213,7 +219,7 @@
                 gridColumns.forEach(function(col) {
                     const val = item[col.field] ?? '';
                     if (col.type === 'date') {
-                        html += '<td class="' + (col.class || 'text-center') + '" data-label="' + escAttr(
+                        html += '<td class="' + escHtml(col.class || 'text-center') + '" data-label="' + escHtml(
                                 col.label) + '">' +
                             (val ? new Date(val).toLocaleDateString('id-ID', {
                                 day: '2-digit',
@@ -221,13 +227,17 @@
                                 year: 'numeric'
                             }) : '-') + '</td>';
                     } else if (col.type === 'angka') {
-                        html += '<td class="' + (col.class || 'text-right') + '" data-label="' + escAttr(col
+                        html += '<td class="' + escHtml(col.class || 'text-right') + '" data-label="' + escHtml(col
                                 .label) + '">' +
-                            (val != null ? val : '-') + '</td>';
+                            (val != null ? escHtml(val) : '-') + '</td>';
+                    } else if (col.type === 'badge') {
+                        const badgeClass = val === 'Manual' ? 'badge-secondary' : 'badge-info';
+                        html += '<td class="' + escHtml(col.class || 'text-center') + '" data-label="' + escHtml(col.label) + '">' +
+                            '<span class="badge ' + badgeClass + '">' + escHtml(val || '-') + '</span></td>';
                     } else {
-                        html += '<td class="' + (col.class || '') + '" data-label="' + escAttr(col.label) +
+                        html += '<td class="' + escHtml(col.class || '') + '" data-label="' + escHtml(col.label) +
                             '">' +
-                            (val || '-') + '</td>';
+                            escHtml(val || '-') + '</td>';
                     }
                 });
                 html += '</tr>';

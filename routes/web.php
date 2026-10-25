@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Akuntansi\BukuBesarController;
+use App\Http\Controllers\Akuntansi\Import\ImportJurnalController;
 use App\Http\Controllers\Akuntansi\JurnalController;
 use App\Http\Controllers\Akuntansi\LabaRugiController;
 use App\Http\Controllers\Akuntansi\NeracaController;
@@ -142,6 +143,11 @@ Route::middleware(['auth', 'checkRole'])->group(function () {
     Route::get('rpt-labarugi/load', [LabaRugiController::class, 'loadData'])->name('rpt-labarugi.load');
     Route::get('rpt-labarugi/pdf', [LabaRugiController::class, 'pdf'])->name('rpt-labarugi.pdf');
     Route::get('rpt-labarugi/excel', [LabaRugiController::class, 'excel'])->name('rpt-labarugi.excel');
+
+    Route::get('import-jurnal', [ImportJurnalController::class, 'index'])->name('import-jurnal.index');
+    Route::get('import-jurnal/template', [ImportJurnalController::class, 'template'])->name('import-jurnal.template');
+    Route::post('import-jurnal', [ImportJurnalController::class, 'store'])->name('import-jurnal.store');
+    Route::delete('import-jurnal/batch/{batchId}', [ImportJurnalController::class, 'destroyBatch'])->name('import-jurnal.batch.destroy');
 
     // BENDAHARA
     Route::resource('penerimaan', PenerimaanController::class);

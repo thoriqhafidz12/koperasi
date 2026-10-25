@@ -73,6 +73,12 @@ class JurnalController extends BaseController
 
         $this->grid = [
             [
+                'label' => 'Asal Data',
+                'field' => 'jImportInfo',
+                'type' => 'badge',
+                'class' => 'text-center'
+            ],
+            [
                 'label' => 'Tanggal',
                 'field' => 'jTgl',
                 'type' => 'date',
@@ -81,7 +87,8 @@ class JurnalController extends BaseController
             [
                 'label' => 'Keterangan',
                 'field' => 'jKeterangan',
-                'type' => 'text'
+                'type' => 'text',
+                'class' => 'text-center'
             ],
             [
                 'label' => 'No Jurnal',
@@ -98,18 +105,20 @@ class JurnalController extends BaseController
             [
                 'label' => 'Nama Debet',
                 'field' => 'jDebetNama',
-                'type' => 'text'
+                'type' => 'text',
+                'class' => 'text-center'
             ],
             [
                 'label' => 'Kode Kredit',
                 'field' => 'jRekKreditKode',
                 'type' => 'text',
-                'class' => 'text-right'
+                'class' => 'text-center'
             ],
             [
                 'label' => 'Nama Kredit',
                 'field' => 'jKreditNama',
-                'type' => 'text'
+                'type' => 'text',
+                'class' => 'text-center'
             ],
             [
                 'label' => 'Nilai Debet',
@@ -147,7 +156,7 @@ class JurnalController extends BaseController
         $query = $this->model::where('jTgl', '>=', $tglAwal)
             ->where('jTgl', '<=', $tglAkhir)
             ->orderBy('jTgl')->orderBy('jId')->get();
-        ;
+
 
         // // Terapkan filter dinamis berdasarkan konfigurasi $this->form.
         // foreach ($this->form as $field) {
@@ -206,6 +215,7 @@ class JurnalController extends BaseController
                 'jTgl' => $row->jTgl,
                 'jKeterangan' => $row->jKeterangan ?: '-',
                 'jNo' => $row->jNo,
+                'jImportInfo' => $row->jImportBatchId ? 'Import: ' . $row->jImportFile : 'Manual',
                 'jRekDebetKode' => $row->jRekDebetKode,
                 'jDebetNama' => $row->jRekDebetNama,
                 'jDebetNilai' => $this->formatRupiah($row->jDebetNilai),
