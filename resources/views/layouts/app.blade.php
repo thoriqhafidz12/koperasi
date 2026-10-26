@@ -20,10 +20,10 @@
 
                 <a class="sidebar-brand d-flex align-items-center justify-content-center"
                     href="{{ route('dashboard') }}">
-                    <div class="sidebar-brand-icon rotate-n-15">
-                        <img src="{{ url('/') }}/assets/img/logo_putih_th.png" alt="Logo" width="40">
+                    <div class="sidebar-brand-icon">
+                        <img src="{{ url('/') }}/assets/img/logo-koperasi.png" alt="Logo" width="40">
                     </div>
-                    <div class="sidebar-brand-text mx-3">KEURIQ-TH</div>
+                    <div class="sidebar-brand-text mx-3">AKAR RIMBA KHATULISTIWA</div>
                 </a>
 
                 <hr class="sidebar-divider my-0">
@@ -256,7 +256,7 @@
                 <footer class="sticky-footer bg-white">
                     <div class="container my-auto">
                         <div class="copyright text-center my-auto">
-                            <span>Copyright &copy; KEURIQ-TH {{ date('Y') }}</span>
+                            <span>Copyright &copy; KEURIQ {{ date('Y') }}</span>
                         </div>
                     </div>
                 </footer>
