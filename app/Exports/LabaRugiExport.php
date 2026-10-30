@@ -39,6 +39,9 @@ class LabaRugiExport implements FromArray, WithColumnFormatting, WithStrictNullC
             } elseif ($row['type'] === 'total') {
                 $this->rows[] = [$teks, (float) $row['saldo']];
                 $this->sectionRows[] = $no;
+            } elseif ($row['type'] === 'objek') {
+                // Rincian objek: indent teks, nol ditulis kosong (sama dengan PDF/HTML).
+                $this->rows[] = ['    ' . $teks, $row['saldo'] == 0 ? '' : (float) $row['saldo']];
             } else {
                 // Item nol ditulis kosong agar tampilan bersih (sama dengan PDF/HTML).
                 $this->rows[] = [$teks, $row['saldo'] == 0 ? '' : (float) $row['saldo']];

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('lrKode', 50)->unique()->comment('Kode baris layout, mis. PENDAPATAN / 5.02 / T-PENDAPATAN');
             $table->string('lrNama', 225);
             $table->string('lrPosisi', 10)->default('PENDAPATAN')->comment('PENDAPATAN | BIAYA');
-            $table->string('lrJenis', 10)->default('item')->comment('header | item | total');
+            $table->string('lrJenis', 10)->default('item')->comment('header | item | objek | total');
             $table->string('lrKodeAkun', 150)->nullable()->comment('Prefix kode objek (ms_objek.msoKode), dipisah koma bila lebih dari satu. Contoh: 4.01.01 atau 4,5');
             $table->string('lrSaldoNormal', 1)->default('D')->comment('D = debet - kredit, K = kredit - debet');
             $table->integer('lrUrut')->default(0);

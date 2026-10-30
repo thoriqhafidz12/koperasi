@@ -760,6 +760,9 @@ abstract class BaseController extends Controller
 
     /**
      * Susun data laba rugi dari konfigurasi ms_labarugi (urut lrUrut).
+     * Baris rincian objek (lrJenis 'objek') didefinisikan manual di
+     * Master Item Laba Rugi dengan lrKodeAkun = kode objek (mis. 5.02.03.10);
+     * baris tanpa konfigurasi tidak tampil (saldonya hanya ikut di total).
      * Total pendapatan/biaya ditentukan oleh baris lrKode 'T-PENDAPATAN' / 'T-BIAYA'
      * (fallback: baris total terakhir per posisi).
      * Laba bersih = total pendapatan - total biaya.
@@ -785,7 +788,11 @@ abstract class BaseController extends Controller
                 // Kode ditampilkan hanya bila prefix tunggal berupa kode bertitik ('5.02.01'); '4,5' → kosong.
                 'kodeTampil' => ($prefix !== '' && !str_contains($prefix, ',') && preg_match('/^[0-9.]+$/', $prefix)) ? $prefix : '',
                 'nama' => $item->lrNama,
-                'indent' => $item->lrJenis === 'item' ? 1 : 0,
+                'indent' => match ($item->lrJenis) {
+                    'item' => 1,
+                    'objek' => 2,
+                    default => 0,
+                },
                 'saldo' => $nilai,
             ];
 
@@ -823,13 +830,20 @@ abstract class BaseController extends Controller
 
     /**
      * Susun data neraca dari konfigurasi ms_neraca (urut nrUrut).
+     * Saldo dihitung dari mutasi jurnal DALAM RENTANG jTgl >= $tglAwal
+     * s.d. jTgl <= $tglAkhir (sama dengan laba rugi) — jurnal di luar
+     * rentang, termasuk saldo awal sebelum $tglAwal, tidak ikut.
+     * Baris rincian objek (nrJenis 'objek') didefinisikan manual di
+     * Master Item Neraca dengan nrKodeAkun = kode objek (mis. 1.01.01.01);
+     * baris tanpa konfigurasi tidak tampil (saldonya hanya ikut di total).
      * Total ditentukan oleh baris nrKode 'T-AKTIVA' / 'T-PASIVA'
      * (fallback: baris total terakhir per posisi).
      */
     public function buildNeraca(string $tglAwal, string $tglAkhir): array
     {
         $items = Neraca::orderBy('nrUrut', 'asc')->orderBy('nrId', 'asc')->get();
-        $saldo = $this->getSaldoNeraca($items, $tglAkhir);
+        $mutasi = $this->getMutasiCoaBetween($tglAwal, $tglAkhir);
+        $saldo = $this->hitungSaldoPrefix($items, $mutasi);
 
         $rows = [];
         $tAktiva = null;
@@ -847,7 +861,11 @@ abstract class BaseController extends Controller
                 // Kode ditampilkan hanya bila prefix tunggal berupa kode bertitik ('1.01.01'); '4,5' → kosong.
                 'kodeTampil' => ($prefix !== '' && !str_contains($prefix, ',') && preg_match('/^[0-9.]+$/', $prefix)) ? $prefix : '',
                 'nama' => $item->nrNama,
-                'indent' => $item->nrJenis === 'item' ? 1 : 0,
+                'indent' => match ($item->nrJenis) {
+                    'item' => 1,
+                    'objek' => 2,
+                    default => 0,
+                },
                 'saldo' => $nilai,
             ];
 
@@ -884,6 +902,32 @@ abstract class BaseController extends Controller
     // ======================== HELPER NERACA END =======================
 
     //  ======================== HELPER FUNCTIONS ========================
+
+    /**
+     * Validasi filter tanggal laporan: format Y-m-d dan tglAwal <= tglAkhir.
+     * Nilai kosong diisi default awal/akhir bulan berjalan.
+     *
+     * @throws \InvalidArgumentException bila format/urutan tanggal tidak valid.
+     * @return array{0: string, 1: string} [tglAwal, tglAkhir]
+     */
+    protected function validasiTanggalLaporan(?string $tglAwal, ?string $tglAkhir): array
+    {
+        $tglAwal = $tglAwal ?: date('Y-m-01');
+        $tglAkhir = $tglAkhir ?: date('Y-m-t');
+
+        foreach (['Tanggal Awal' => $tglAwal, 'Tanggal Akhir' => $tglAkhir] as $label => $tgl) {
+            $d = \DateTime::createFromFormat('Y-m-d', $tgl);
+            if (!$d || $d->format('Y-m-d') !== $tgl) {
+                throw new \InvalidArgumentException("$label tidak valid (gunakan format YYYY-MM-DD).");
+            }
+        }
+        if ($tglAwal > $tglAkhir) {
+            throw new \InvalidArgumentException('Tanggal Awal tidak boleh melebihi Tanggal Akhir.');
+        }
+
+        return [$tglAwal, $tglAkhir];
+    }
+
     public function formatDate($date): string
     {
         $tanggal = '';

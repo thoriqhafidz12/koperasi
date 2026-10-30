@@ -28,8 +28,14 @@ class CetakNeracaController extends BaseController
      */
     public function pdf(Request $request)
     {
-        $tglAwal = $request->jTglAwal ?: date('Y-m-01');
-        $tglAkhir = $request->jTglAkhir ?: date('Y-m-t');
+        try {
+            [$tglAwal, $tglAkhir] = $this->validasiTanggalLaporan(
+                $request->input('jTglAwal'),
+                $request->input('jTglAkhir')
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         $neraca = $this->buildNeraca($tglAwal, $tglAkhir);
 
@@ -65,6 +71,12 @@ class CetakNeracaController extends BaseController
                 $pdf->SetFont('Arial', 'B', 9);
                 $pdf->Cell(130, 5, $teks, 1, 0, 'R');
                 $pdf->Cell(60, 5, $this->formatSaldo($row['saldo']), 1, 1, 'R');
+            } elseif ($row['type'] === 'objek') {
+                $pdf->SetFont('Arial', '', 8);
+                $pdf->Row([
+                    '      ' . $teks,
+                    $row['saldo'] == 0 ? '-' : $this->formatSaldo($row['saldo']),
+                ]);
             } else {
                 $pdf->SetFont('Arial', '', 9);
                 $pdf->Row([

@@ -71,8 +71,14 @@ class LabaRugiController extends BaseController
 
     public function loadData(Request $request): JsonResponse
     {
-        $tglAwal = $request->jTglAwal ?: date('Y-m-01');
-        $tglAkhir = $request->jTglAkhir ?: date('Y-m-t');
+        try {
+            [$tglAwal, $tglAkhir] = $this->validasiTanggalLaporan(
+                $request->input('jTglAwal'),
+                $request->input('jTglAkhir')
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         $labarugi = $this->buildLabaRugi($tglAwal, $tglAkhir);
 
@@ -85,10 +91,10 @@ class LabaRugiController extends BaseController
                 'kodeTampil' => $row['kodeTampil'],
                 'nama' => $row['nama'],
                 'indent' => $row['indent'],
-                // header tanpa nilai; item nol tampil '-' di view; total selalu diformat.
+                // header tanpa nilai; item/objek nol tampil '-' di view; total selalu diformat.
                 'saldo' => $row['type'] === 'header'
                     ? ''
-                    : ($row['type'] === 'item' && $row['saldo'] == 0
+                    : (in_array($row['type'], ['item', 'objek'], true) && $row['saldo'] == 0
                         ? ''
                         : $this->formatSaldo($row['saldo'])),
             ];
@@ -117,8 +123,14 @@ class LabaRugiController extends BaseController
      */
     public function excel(Request $request)
     {
-        $tglAwal = $request->jTglAwal ?: date('Y-m-01');
-        $tglAkhir = $request->jTglAkhir ?: date('Y-m-t');
+        try {
+            [$tglAwal, $tglAkhir] = $this->validasiTanggalLaporan(
+                $request->input('jTglAwal'),
+                $request->input('jTglAkhir')
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         $labarugi = $this->buildLabaRugi($tglAwal, $tglAkhir);
 

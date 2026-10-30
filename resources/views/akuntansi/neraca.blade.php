@@ -150,6 +150,20 @@
             }
 
             /**
+             * Validasi rentang tanggal: Tanggal Awal tidak boleh melebihi Tanggal Akhir
+             * (format YYYY-MM-DD dari input type=date, bisa dibandingkan sebagai string).
+             */
+            function validateRange() {
+                const awal = getFieldValue('jTglAwal');
+                const akhir = getFieldValue('jTglAkhir');
+                if (awal && akhir && awal > akhir) {
+                    swalError('Filter Tidak Valid', 'Tanggal Awal tidak boleh melebihi Tanggal Akhir.');
+                    return false;
+                }
+                return true;
+            }
+
+            /**
              * Info rentang filter: "Tanggal Awal: ... | Sumber: ..."
              */
             function buildInfoText() {
@@ -202,7 +216,8 @@
 
             /**
              * Render satu baris neraca sesuai jenisnya:
-             * header (kategori), item (isi, indent), total (jumlah).
+             * header (kategori), item (isi, indent), objek (rincian, indent dalam),
+             * total (jumlah).
              */
             function renderRow(row) {
                 const teks = ((row.kodeTampil ? row.kodeTampil + ' ' : '') + row.nama);
@@ -219,6 +234,12 @@
                         '<td class="text-right" data-label="Jumlah">' + (row.saldo || '-') + '</td></tr>';
                 }
 
+                if (row.type === 'objek') {
+                    return '<tr class="text-muted">' +
+                        '<td class="pl-5" data-label="Keterangan"><small>' + escAttr(teks) + '</small></td>' +
+                        '<td class="text-right" data-label="Jumlah"><small>' + (row.saldo || '-') + '</small></td></tr>';
+                }
+
                 return '<tr>' +
                     '<td class="pl-4" data-label="Keterangan">' + escAttr(teks) + '</td>' +
                     '<td class="text-right" data-label="Jumlah">' + (row.saldo || '-') + '</td></tr>';
@@ -232,6 +253,9 @@
                 const missing = validateRequired();
                 if (missing.length) {
                     swalError('Filter Tidak Lengkap', 'Silakan isi: ' + missing.join(', ') + '.');
+                    return;
+                }
+                if (!validateRange()) {
                     return;
                 }
 
@@ -313,6 +337,9 @@
                     swalError('Filter Tidak Lengkap', 'Silakan isi: ' + missing.join(', ') + '.');
                     return;
                 }
+                if (!validateRange()) {
+                    return;
+                }
 
                 window.open('{{ route($route.'.pdf') }}?' + $form.serialize(), '_blank');
             });
@@ -325,6 +352,9 @@
                 const missing = validateRequired();
                 if (missing.length) {
                     swalError('Filter Tidak Lengkap', 'Silakan isi: ' + missing.join(', ') + '.');
+                    return;
+                }
+                if (!validateRange()) {
                     return;
                 }
 

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nrKode', 50)->unique()->comment('Kode baris layout, mis. AKTIVA / 1.01 / 1.01.01 / T-AKTIVA / LR');
             $table->string('nrNama', 225);
             $table->string('nrPosisi', 10)->default('AKTIVA')->comment('AKTIVA | PASIVA');
-            $table->string('nrJenis', 10)->default('item')->comment('header | item | total');
+            $table->string('nrJenis', 10)->default('item')->comment('header | item | objek | total');
             $table->string('nrKodeAkun', 150)->nullable()->comment('Prefix kode objek (ms_objek.msoKode), dipisah koma bila lebih dari satu. Contoh: 1.01.01 atau 4,5');
             $table->string('nrSaldoNormal', 1)->default('D')->comment('D = debet - kredit, K = kredit - debet');
             $table->integer('nrUrut')->default(0);

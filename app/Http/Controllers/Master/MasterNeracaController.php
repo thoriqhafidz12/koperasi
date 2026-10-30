@@ -61,6 +61,7 @@ class MasterNeracaController extends BaseController
                 'options' => [
                     ['value' => 'header', 'label' => 'Header / Kategori'],
                     ['value' => 'item', 'label' => 'Item / Isi'],
+                    ['value' => 'objek', 'label' => 'Objek / Rincian'],
                     ['value' => 'total', 'label' => 'Total / Jumlah'],
                 ],
             ],
