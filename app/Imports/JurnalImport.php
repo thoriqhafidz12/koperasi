@@ -76,10 +76,10 @@ class JurnalImport implements ToCollection, WithHeadingRow
                 'no_jurnal' => ['required', 'string', 'max:100'],
                 'tanggal' => ['required', 'date_format:Y-m-d'],
                 'keterangan' => ['nullable', 'string', 'max:255'],
-                'kode_debet' => ['required', 'string', 'max:20', Rule::in($accountCodes)],
-                'nilai_debet' => ['required', 'numeric', 'gt:0', 'decimal:0,2'],
-                'kode_kredit' => ['required', 'string', 'max:20', Rule::in($accountCodes)],
-                'nilai_kredit' => ['required', 'numeric', 'gt:0', 'decimal:0,2'],
+                // 'kode_debet' => ['required', 'string', 'max:20', Rule::in($accountCodes)],
+                // 'nilai_debet' => ['required', 'numeric', 'gt:0', 'decimal:0,2'],
+                // 'kode_kredit' => ['required', 'string', 'max:20', Rule::in($accountCodes)],
+                // 'nilai_kredit' => ['required', 'numeric', 'gt:0', 'decimal:0,2'],
                 'sumber' => ['nullable', 'string', 'max:100'],
             ], [
                 'no_jurnal.required' => 'Nomor jurnal wajib diisi.',
@@ -115,10 +115,10 @@ class JurnalImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            if (round((float) $data['nilai_debet'] * 100) !== round((float) $data['nilai_kredit'] * 100)) {
-                $errors[] = "Baris {$rowNumber}: nilai debet dan kredit harus sama.";
-                continue;
-            }
+            // if (round((float) $data['nilai_debet'] * 100) !== round((float) $data['nilai_kredit'] * 100)) {
+            //     $errors[] = "Baris {$rowNumber}: nilai debet dan kredit harus sama.";
+            //     continue;
+            // }
 
             $records[] = [
                 'jHeadId' => null,
@@ -127,10 +127,10 @@ class JurnalImport implements ToCollection, WithHeadingRow
                 'jKeterangan' => $data['keterangan'],
                 'jRekDebetKode' => $data['kode_debet'],
                 'jRekDebetNama' => $objectNames->get($data['kode_debet']),
-                'jDebetNilai' => $data['nilai_debet'],
+                'jDebetNilai' => $data['nilai_debet'] ?? 0,
                 'jRekKreditKode' => $data['kode_kredit'],
                 'jRekKreditNama' => $objectNames->get($data['kode_kredit']),
-                'jKreditNilai' => $data['nilai_kredit'],
+                'jKreditNilai' => $data['nilai_kredit'] ?? 0,
                 'jSumber' => $data['sumber'] ?: 'IMPORT EXCEL',
                 'jImportBatchId' => $this->batchId,
                 'jImportFile' => $this->fileName,

@@ -840,12 +840,32 @@ abstract class BaseController extends Controller
      * baris tanpa konfigurasi tidak tampil (saldonya hanya ikut di total).
      * Total ditentukan oleh baris nrKode 'T-AKTIVA' / 'T-PASIVA'
      * (fallback: baris total terakhir per posisi).
+     * Bila laba (SHU) periode positif, alokasi pembagian SHU (ms_shu) untuk
+     * objek COA di akun 2 (LIABILITAS) dan 3 (MODAL/EKUITAS) ditambahkan ke
+     * saldo setiap baris yang prefix-nya mencakup kode alokasi — rincian,
+     * item induk, maupun total (JUMLAH LIABILITAS, TOTAL EKUITAS, JUMLAH
+     * PASIVA) ikut menghitung alokasi walau tutup buku belum dijurnal.
+     * Alokasi ke akun biaya (5) tidak masuk neraca. Bila laba nol/rugi,
+     * alokasi tidak disuntikkan (baris menampilkan saldo jurnal seperti biasa).
      */
     public function buildNeraca(string $tglAwal, string $tglAkhir): array
     {
         $items = Neraca::orderBy('nrUrut', 'asc')->orderBy('nrId', 'asc')->get();
         $mutasi = $this->getMutasiCoaBetween($tglAwal, $tglAkhir);
         $saldo = $this->hitungSaldoPrefix($items, $mutasi);
+
+        // Alokasi pembagian SHU (hanya bila laba periode positif).
+        // Hanya alokasi dengan objek COA di akun 2 / 3 yang masuk neraca.
+        $pembagianShu = $this->buildPembagianShu($tglAwal, $tglAkhir);
+        $alokasiShu = [];
+        if ($pembagianShu['shu'] > 0) {
+            foreach ($pembagianShu['rows'] as $rowShu) {
+                $kode = $rowShu['objekKode'];
+                if ($kode && in_array(explode('.', $kode)[0], ['2', '3'], true)) {
+                    $alokasiShu[$kode] = $rowShu['nilai'];
+                }
+            }
+        }
 
         $rows = [];
         $tAktiva = null;
@@ -855,6 +875,25 @@ abstract class BaseController extends Controller
         foreach ($items as $item) {
             $nilai = (float) ($saldo[$item->nrId] ?? 0);
             $prefix = trim((string) $item->nrKodeAkun);
+
+            // Injeksi alokasi SHU: alokasi yang kode objeknya tercakup prefix
+            // baris (eksak atau anak, mis. '2.02.01' mencakup '2.02.01.01')
+            // ditambahkan ke saldo jurnal — sehingga rincian ikut terhitung
+            // di item induk dan total liabilitas/ekuitas.
+            if ($prefix !== '' && $alokasiShu) {
+                $tambah = 0.0;
+                foreach (array_map('trim', explode(',', $prefix)) as $p) {
+                    if ($p === '') {
+                        continue;
+                    }
+                    foreach ($alokasiShu as $kode => $nilaiAlokasi) {
+                        if ($kode === $p || str_starts_with($kode, $p . '.')) {
+                            $tambah += $nilaiAlokasi;
+                        }
+                    }
+                }
+                $nilai = round($nilai + $tambah, 2);
+            }
 
             $rows[] = [
                 'nrId' => $item->nrId,
