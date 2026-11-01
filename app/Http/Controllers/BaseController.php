@@ -8,11 +8,13 @@ use App\Models\Jurnal\Penerimaan;
 use App\Models\Jurnal\PenerimaanCounter;
 use App\Models\Jurnal\Pengeluaran;
 use App\Models\Jurnal\PengeluaranCounter;
+use App\Models\Master\Coa\MasterObjek;
 use App\Models\Master\LabaRugi;
 use App\Models\Master\Mapping\MappingPenerimaan;
 use App\Models\Master\Mapping\MappingPengeluaran;
 use App\Models\Master\Mapping\MappingSaldoAwal;
 use App\Models\Master\Neraca;
+use App\Models\Master\PembagianShu;
 use App\Models\Master\SaldoAwal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -900,6 +902,79 @@ abstract class BaseController extends Controller
         ];
     }
     // ======================== HELPER NERACA END =======================
+
+    //  ======================== HELPER PEMBAGIAN SHU ========================
+
+    /**
+     * Susun rincian pembagian SHU: basis nilai = laba (rugi) bersih periode
+     * dari buildLabaRugi(); persentase dan pemetaan COA dari baris aktif ms_shu
+     * (urut shuUrut). Nama objek COA diresolve dari ms_objek by kode.
+     * Total nilai = jumlah nilai baris yang sudah dibulatkan 2 desimal,
+     * sehingga total yang tampil selalu sama dengan jumlah barisnya.
+     *
+     * @return array{
+     *   rows: array<int, array{no:int, shuId:int, shuKode:string, kategori:string,
+     *                          persen:float, objekKode:?string, objekNama:?string, nilai:float}>,
+     *   totalPersen: float, totalNilai: float, shu: float,
+     *   laba: bool, persenOk: bool, tglAwal: string, tglAkhir: string
+     * }
+     */
+    public function buildPembagianShu(string $tglAwal, string $tglAkhir): array
+    {
+        $labarugi = $this->buildLabaRugi($tglAwal, $tglAkhir);
+        $shu = (float) $labarugi['labaBersih'];
+
+        $items = PembagianShu::query()
+            ->where('shuIsActive', 1)
+            ->orderBy('shuUrut', 'asc')
+            ->orderBy('shuId', 'asc')
+            ->get();
+
+        // Satu query untuk nama objek COA (referensi by kode, tanpa FK).
+        $kodes = $items->pluck('shuObjekKode')->filter()->unique()->values()->all();
+        $namaObjek = MasterObjek::query()
+            ->whereIn('msoKode', $kodes)
+            ->pluck('msoNama', 'msoKode')
+            ->all();
+
+        $rows = [];
+        $totalPersen = 0.0;
+        $totalNilai = 0.0;
+
+        foreach ($items as $index => $item) {
+            $persen = (float) $item->shuPersen;
+            $nilai = round($shu * $persen / 100, 2);
+            $totalPersen += $persen;
+            $totalNilai += $nilai;
+
+            $rows[] = [
+                'no' => $index + 1,
+                'shuId' => $item->shuId,
+                'shuKode' => $item->shuKode,
+                'kategori' => $item->shuNama,
+                'persen' => $persen,
+                'objekKode' => $item->shuObjekKode,
+                'objekNama' => $item->shuObjekKode ? ($namaObjek[$item->shuObjekKode] ?? null) : null,
+                'nilai' => $nilai,
+            ];
+        }
+
+        $totalPersen = round($totalPersen, 2);
+        $totalNilai = round($totalNilai, 2);
+
+        return [
+            'rows' => $rows,
+            'totalPersen' => $totalPersen,
+            'totalNilai' => $totalNilai,
+            'shu' => $shu,
+            'laba' => $labarugi['laba'],
+            'persenOk' => abs($totalPersen - 100) < 0.001,
+            'tglAwal' => $tglAwal,
+            'tglAkhir' => $tglAkhir,
+        ];
+    }
+
+    // ======================== HELPER PEMBAGIAN SHU END ========================
 
     //  ======================== HELPER FUNCTIONS ========================
 

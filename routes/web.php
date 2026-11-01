@@ -5,6 +5,7 @@ use App\Http\Controllers\Akuntansi\Import\ImportJurnalController;
 use App\Http\Controllers\Akuntansi\JurnalController;
 use App\Http\Controllers\Akuntansi\LabaRugiController;
 use App\Http\Controllers\Akuntansi\NeracaController;
+use App\Http\Controllers\Akuntansi\PembagianShuController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Bendahara\PenerimaanController;
 use App\Http\Controllers\Bendahara\PengeluaranController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\Master\MasterBankkasController;
 use App\Http\Controllers\Master\MasterJaminanController;
 use App\Http\Controllers\Master\MasterLabaRugiController;
 use App\Http\Controllers\Master\MasterNeracaController;
+use App\Http\Controllers\Master\MasterPembagianShuController;
 use App\Http\Controllers\Master\MasterTujuanPinjamanController;
 use App\Http\Controllers\Master\MetodePembayaranController;
 use App\Http\Controllers\MenuController;
@@ -115,6 +117,7 @@ Route::middleware(['auth', 'checkRole'])->group(function () {
     Route::resource('ms-tujuan-pinjaman', MasterTujuanPinjamanController::class);
     Route::resource('ms-neraca', MasterNeracaController::class);
     Route::resource('ms-labarugi', MasterLabaRugiController::class);
+    Route::resource('ms-shu', MasterPembagianShuController::class);
 
     // PINJAMAN
     Route::resource('pengajuan-pinjaman', PengajuanPinjamanController::class);
@@ -143,6 +146,11 @@ Route::middleware(['auth', 'checkRole'])->group(function () {
     Route::get('rpt-labarugi/load', [LabaRugiController::class, 'loadData'])->name('rpt-labarugi.load');
     Route::get('rpt-labarugi/pdf', [LabaRugiController::class, 'pdf'])->name('rpt-labarugi.pdf');
     Route::get('rpt-labarugi/excel', [LabaRugiController::class, 'excel'])->name('rpt-labarugi.excel');
+
+    Route::get('rpt-pembagian-shu', [PembagianShuController::class, 'index'])->name('rpt-pembagian-shu.index');
+    Route::get('rpt-pembagian-shu/load', [PembagianShuController::class, 'loadData'])->name('rpt-pembagian-shu.load');
+    Route::get('rpt-pembagian-shu/pdf', [PembagianShuController::class, 'pdf'])->name('rpt-pembagian-shu.pdf');
+    Route::get('rpt-pembagian-shu/excel', [PembagianShuController::class, 'excel'])->name('rpt-pembagian-shu.excel');
 
     Route::get('import-jurnal', [ImportJurnalController::class, 'index'])->name('import-jurnal.index');
     Route::get('import-jurnal/template', [ImportJurnalController::class, 'template'])->name('import-jurnal.template');
